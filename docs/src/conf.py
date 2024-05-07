@@ -44,5 +44,4 @@ html_theme = "furo"
 # html_logo = ...  # noqa: ERA001
 html_theme_options = {
     "sidebar_hide_name": True,
-    "top_of_page_button": None,
 }

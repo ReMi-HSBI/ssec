@@ -29,15 +29,16 @@ classifiers = [
   "Topic :: Software Development",
   "Typing :: Typed"
 ]
-dependencies = ["aiohttp"]
+dependencies = [
+  "aiohttp~=3.9.5",
+]
 
 [project.optional-dependencies]
 dev = [
-  "mypy",
-  "ruff",
-  "sphinx",
-  "sphinx-autodoc-typehints",
-  "furo",
+  "mypy~=1.10.0",
+  "ruff~=0.4.3",
+  "sphinx~=7.3.7",
+  "furo~=2024.04.27",
 ]
 
 [project.urls]

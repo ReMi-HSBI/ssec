@@ -45,52 +45,120 @@ There is no user installation yet. Please refer to the developer installation.
 
 ## Installation (Developer)
 
-1\. Clone this repository to a desired location on your maschine using `ssh`:
+**1\. Clone this repository to a desired location on your maschine using `ssh`:**
 
 ```sh
 git git@github.com:sharly-project/aiosse.git
 ```
 
-2\. Change into the project directory:
+**2\. Change into the project directory:**
 
 ```sh
 cd aiosse
 ```
 
-3\. Create a virtual environment:
+**3\. Create a virtual environment:**
 
+..with [`venv`](https://docs.python.org/3/library/venv.html):
 ```sh
-python -m venv .venv
+python3.12 -m venv .venv
 ```
 
-> Depending on the installation `python` may deviate e.g. `py` on Windows or
-> `python3.12` on Linux.
+..with [`uv`](https://github.com/astral-sh/uv):
+```sh
+uv venv -p 3.12
+```
 
-4\. Activate the virtual environment:
+**4\. Activate the virtual environment:**
 
-**Windows**:
-
+.. on Windows:
 ```sh
  .\.venv\Scripts\activate
 ```
 
-**Linux**:
-
+.. on Linux:
 ```sh
  source \.venv\bin\activate
 ```
 
-**MacOS**:
-
+.. on MacOS:
 ```sh
 -
 ```
 
-> If everything worked out, you should now see a **(.venv)** prompt in your
-> terminal.
+> If everything worked out, you should now see a **(.venv)** or **(aiosse)** 
+> prompt in your terminal.
 
-5\. Install aiosse's developer edition:
+**5\. Install aiosse's developer edition:**
+
+..with [`pip`](https://pip.pypa.io/en/stable):
+```sh
+pip install -e .[dev]
+```
+
+..via [`uv`](https://github.com/astral-sh/uv):
+```sh
+uv pip install -e .[dev]
+```
+
+## Miscellaneous
+
+### Documentation
+
+Build the documentation by running the following command in the root directory
+of the project:
 
 ```sh
-pip install --editable .[dev]
+sphinx-build -b html docs/src docs/build
 ```
+
+> The command requires that the [developers edition](#installation-developer)
+> of `aiosse` is installed and the virtual environment is running.
+
+The documentation is then accessible via `doc/build/index.html`.
+
+### Set up Visual Studio Code for Development
+
+To edit the code base with [Visual Studio Code](https://code.visualstudio.com),
+install the following extensions:
+
+| Name              | URL                                                                                  |
+|-------------------|--------------------------------------------------------------------------------------|
+| Python            | <https://marketplace.visualstudio.com/items?itemName=ms-python.python>               |
+| Mypy Type Checker | <https://marketplace.visualstudio.com/items?itemName=ms-python.mypy-type-checker>    |
+| Ruff              | <https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff>             |
+| markdownlint      | <https://marketplace.visualstudio.com/items?itemName=DavidAnson.vscode-markdownlint> |
+| Even Better TOML  | <https://marketplace.visualstudio.com/items?itemName=tamasfe.even-better-toml>       |
+
+Necessary settings are already included in the `.vscode` directory and should
+be enabled per default.
+
+## Contributing
+
+Contributing to `aiosse` is highly appreciated, but comes with some requirements:
+
+1. **Type Hints**
+
+    Write modern python code using
+    [type annotations](https://peps.python.org/pep-0484/)
+    to enable static analysis and potential runtime type checking.
+
+2. **Documentation**
+
+    Write quality documentation using
+    [numpydoc](https://numpydoc.readthedocs.io/en/latest/format.html)
+    docstring conventions.
+
+3. **Linting**
+
+   Lint your code with [ruff](https://github.com/charliermarsh/ruff) and
+   [mypy](http://mypy-lang.org).
+
+4. **Style**
+
+    Format your code using [ruff](https://github.com/charliermarsh/ruff).
+
+5. **Testing**
+
+    Write tests for your code using
+    [unittest](https://docs.python.org/3/library/unittest.html).
