@@ -1,4 +1,4 @@
-Welcome to aiosse's documentation!
+Welcome to ssec's documentation!
 ==================================
 
 .. autosummary::
@@ -6,7 +6,7 @@ Welcome to aiosse's documentation!
    :template: autosummary/module.rst
    :recursive:
 
-   aiosse
+   ssec
 
 Indices and tables
 ==================

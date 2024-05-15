@@ -5,8 +5,9 @@
 
 ## Description
 
-Yet another asynchronous library for server-sent events.  
-This library works with [aiohttp](https://docs.aiohttp.org/en/stable).
+Yet another library for server-sent events.  
+This library works with [httpx](https://github.com/encode/httpx) to support
+synchronous as well as asynchronous workflows.
 
 ## Note
 Although there are already some libraries on the subject
@@ -27,9 +28,39 @@ the error or is entirely skipped.
 [^1]: [Code Reference](https://github.com/rtfol/aiohttp-sse-client/blob/e311075ac8b9b75d8b09512f8638f1dd03e2ef2b/aiohttp_sse_client/client.py#L157)   
 [^2]: [Code Reference](https://github.com/ebraminio/aiosseclient/blob/375d597bcc3a7bf871b65913b366d515b300dc93/aiosseclient.py#L131)
 
+## Example
+`sync`
+```python
+import logging
+import ssec
+
+def main() -> None:
+    logging.basicConfig(level=logging.INFO)
+    for event in ssec.stream("https://stream.wikimedia.org/v2/stream/recentchange"):
+        print(event)
+
+main()
+```
+
+`async`
+```python
+import asyncio
+import logging
+import ssec
+
+async def main() -> None:
+    logging.basicConfig(level=logging.INFO)
+    async for event in ssec.stream_async(
+        "https://stream.wikimedia.org/v2/stream/recentchange",
+    ):
+        print(event)
+
+asyncio.run(main())
+```
+
 ## Installation
 
-aiosse is written in [Python](https://www.python.org) and tries to keep track
+ssec is written in [Python](https://www.python.org) and tries to keep track
 of the newest version available. Currently[^3], this is
 [Python 3.12.3](https://www.python.org/downloads/release/python-3123/).
 On some operating systems, this version is pre-installed, but on many it is
@@ -48,13 +79,13 @@ There is no user installation yet. Please refer to the developer installation.
 **1\. Clone this repository to a desired location on your maschine using `ssh`:**
 
 ```sh
-git git@github.com:sharly-project/aiosse.git
+git git@github.com:sharly-project/ssec.git
 ```
 
 **2\. Change into the project directory:**
 
 ```sh
-cd aiosse
+cd ssec
 ```
 
 **3\. Create a virtual environment:**
@@ -86,10 +117,10 @@ uv venv -p 3.12
 -
 ```
 
-> If everything worked out, you should now see a **(.venv)** or **(aiosse)** 
+> If everything worked out, you should now see a **(.venv)** or **(ssec)** 
 > prompt in your terminal.
 
-**5\. Install aiosse's developer edition:**
+**5\. Install ssec's developer edition:**
 
 ..with [`pip`](https://pip.pypa.io/en/stable):
 ```sh
@@ -113,7 +144,7 @@ sphinx-build -b html docs/src docs/build
 ```
 
 > The command requires that the [developers edition](#installation-developer)
-> of `aiosse` is installed and the virtual environment is running.
+> of `ssec` is installed and the virtual environment is running.
 
 The documentation is then accessible via `doc/build/index.html`.
 
@@ -135,7 +166,7 @@ be enabled per default.
 
 ## Contributing
 
-Contributing to `aiosse` is highly appreciated, but comes with some requirements:
+Contributing to `ssec` is highly appreciated, but comes with some requirements:
 
 1. **Type Hints**
 
@@ -161,4 +192,4 @@ Contributing to `aiosse` is highly appreciated, but comes with some requirements
 5. **Testing**
 
     Write tests for your code using
-    [unittest](https://docs.python.org/3/library/unittest.html).
+    [pytest](https://docs.python.org/3/library/unittest.html).
