@@ -36,7 +36,9 @@ import ssec
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO)
-    for event in ssec.stream("https://stream.wikimedia.org/v2/stream/recentchange"):
+    for event in ssec.stream(
+        "https://stream.wikimedia.org/v2/stream/recentchange"
+    ):
         print(event)
 
 main()
@@ -51,7 +53,7 @@ import ssec
 async def main() -> None:
     logging.basicConfig(level=logging.INFO)
     async for event in ssec.stream_async(
-        "https://stream.wikimedia.org/v2/stream/recentchange",
+        "https://stream.wikimedia.org/v2/stream/recentchange"
     ):
         print(event)
 
