@@ -17,3 +17,6 @@ class Event:
 
     type: str = "message"
     data: str | None = None
+
+    origin: str | None = None
+    last_event_id: str | None = None

@@ -32,7 +32,7 @@ DELIMITER: Final[str] = ":"
 SSE_CONTENT_TYPE: Final[str] = "text/event-stream"
 SSE_CACHE_CONTROL: Final[str] = "no-store"
 
-HEADERS: Final[dict[str, str]] = {
+SSE_HEADERS: Final[dict[str, str]] = {
     "Accept": SSE_CONTENT_TYPE,
     "Cache-Control": SSE_CACHE_CONTROL,
 }

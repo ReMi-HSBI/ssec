@@ -2,21 +2,66 @@
 
 from __future__ import annotations
 
+import dataclasses
 import http
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    import types
     from collections.abc import Iterator
 
-    import httpx
+import httpx
 
 from .constants import DELIMITER, SSE_CONTENT_TYPE
 from .event import Event
 
 
-def check_response(response: httpx.Response) -> None:
-    """Check the response for errors.
+def create_session[T: (httpx.Client, httpx.AsyncClient)](
+    session_class: type[T],
+    connect_timeout: float,
+) -> T:
+    """Create an `httpx` session with a custom connect timeout.
+
+    Parameters
+    ----------
+    session_class
+        The `httpx` session class to create.
+    connect_timeout
+        The connect timeout, in seconds.
+    """
+    timeout = httpx.Timeout(
+        connect=connect_timeout,
+        read=None,
+        write=None,
+        pool=None,
+    )
+    return session_class(timeout=timeout)
+
+
+@dataclasses.dataclass(
+    repr=False,
+    eq=False,
+    kw_only=True,
+    slots=True,
+    weakref_slot=True,
+)
+class SSEConfig:
+    """Mutable configuration for runtime settable values.
+
+    Attributes
+    ----------
+    reconnect_timeout
+        The time to wait before reconnecting to a server, in seconds.
+    last_event_id
+        The last event ID received from the server.
+    """
+
+    reconnect_timeout: float
+    last_event_id: str
+    origin: str | None = None
+
+
+def validate_sse_response(response: httpx.Response) -> None:
+    """Validate a (SSE-)response.
 
     Parameters
     ----------
@@ -26,9 +71,7 @@ def check_response(response: httpx.Response) -> None:
     Raises
     ------
     ValueError
-        If the response status code is invalid.
-    TypeError
-        If the response content type is invalid.
+        If the response is invalid.
     """
     if response.status_code != http.HTTPStatus.OK:
         message = f"Unexpected status code: {response.status_code}!"
@@ -36,7 +79,7 @@ def check_response(response: httpx.Response) -> None:
 
     if SSE_CONTENT_TYPE not in response.headers.get("content-type"):
         message = f"Invalid content type: expected {SSE_CONTENT_TYPE}!"
-        raise TypeError(message)
+        raise ValueError(message)
 
 
 def extract_lines(buffer: str) -> tuple[list[str], str]:
@@ -50,7 +93,7 @@ def extract_lines(buffer: str) -> tuple[list[str], str]:
     Returns
     -------
     tuple[list[str], str]
-        A tuple containing extracted lines of the buffer as well as it's remnant.
+        A tuple containing extracted lines of the buffer and the buffers remnant.
     """
     lines: list[str] = []
     for line in buffer.splitlines(keepends=True):
@@ -64,16 +107,16 @@ def extract_lines(buffer: str) -> tuple[list[str], str]:
 
 def parse_events(
     lines: list[str],
-    external_config: types.SimpleNamespace,
+    config: SSEConfig,
 ) -> Iterator[Event]:
-    """Parse server-sent events from a list of lines.
+    """Parse SSEs from a list of lines.
 
     Parameters
     ----------
     lines
-        A list of lines to parse server-sent events from.
-    external_config
-        A configuration object containing the `last_event_id` and `reconnect_time`.
+        A list of lines to parse SSEs from.
+    config
+        A configuration object containing runtime settable values.
     """
     event_type = ""
     event_data = ""
@@ -86,7 +129,12 @@ def parse_events(
             # Remove last character of data if it is a U+000A LINE FEED (LF) character.
             event_data = event_data.rstrip("\n")
 
-            yield Event(event_type, event_data)
+            yield Event(
+                event_type,
+                event_data,
+                origin=config.origin,
+                last_event_id=config.last_event_id,
+            )
             continue
 
         # If the line starts with a U+003A COLON character (:) -> Ignore the line.
@@ -115,7 +163,8 @@ def parse_events(
                 # ignore the field. The specification is not clear here.
                 # In an example it says: "If the "id" field has no value, this
                 # will reset the last event ID to the empty string"
-                external_config.last_event_id = value
+                if "\u0000" not in value:
+                    config.last_event_id = value
             case "retry":
                 # If the field name is "retry"
                 # -> If the field value consists of only ASCII digits, then
@@ -123,7 +172,7 @@ def parse_events(
                 # the event stream's reconnection time to that integer.
                 # Otherwise, ignore the field.
                 if value.isdigit():
-                    external_config.reconnection_time = int(value)
+                    config.reconnect_timeout = float(value)
             case _:
                 # Otherwise -> The field is ignored.
                 continue

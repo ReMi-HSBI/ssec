@@ -6,7 +6,6 @@ import asyncio
 import http
 import logging
 import time
-import types
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -17,7 +16,13 @@ if TYPE_CHECKING:
 
 import httpx
 
-from .common import check_response, extract_lines, parse_events
+from .common import (
+    SSEConfig,
+    create_session,
+    extract_lines,
+    parse_events,
+    validate_sse_response,
+)
 from .constants import (
     DECODER,
     DEFAULT_BACKOFF_DELAY,
@@ -25,7 +30,7 @@ from .constants import (
     DEFAULT_CONNECT_TIMEOUT,
     DEFAULT_MAX_CONNECT_ATTEMPTS,
     DEFAULT_RECONNECT_TIMEOUT,
-    HEADERS,
+    SSE_HEADERS,
 )
 
 _logger = logging.getLogger("ssec")
@@ -66,35 +71,26 @@ def stream(
         This time is exponentiated by the number of connectioin attempts.
     """
     if session is None:
-        timeout = httpx.Timeout(
-            connect=connect_timeout,
-            read=None,
-            write=None,
-            pool=None,
-        )
-        session = httpx.Client(timeout=timeout)
+        session = create_session(httpx.Client, connect_timeout=connect_timeout)
 
+    config = SSEConfig(reconnect_timeout=reconnect_timeout, last_event_id="")
     with session:
-        error: Exception | None = None
-        config = types.SimpleNamespace(
-            reconnect_timeout=reconnect_timeout,
-            last_event_id="",
-        )
         connect_attempt = 0
-        while connect_attempt < max_connect_attempts:
-            try:
-                headers = HEADERS.copy()
-                if config.last_event_id:
-                    headers["Last-Event-ID"] = config.last_event_id
+        while True:
+            headers = SSE_HEADERS.copy()
+            if config.last_event_id:
+                headers["Last-Event-ID"] = config.last_event_id
 
+            try:
                 with session.stream(method, url, headers=headers) as response:
+                    validate_sse_response(response)
+
                     if response.status_code == http.HTTPStatus.NO_CONTENT:
                         _logger.info("Client was told to stop reconnecting.")
                         break
 
-                    check_response(response)
+                    config.origin = str(response.url)
 
-                    error = None
                     connect_attempt = 0
                     _logger.info(f"Connected to {url!r}.")
 
@@ -104,8 +100,10 @@ def stream(
                         lines, buffer = extract_lines(buffer)
                         yield from parse_events(lines, config)
 
-            except httpx.HTTPError as e:
-                error = e
+            except httpx.HTTPError:
+                if connect_attempt >= max_connect_attempts:
+                    _logger.exception(f"Failed to connect to {url!r}!")
+                    raise
 
                 waiting_period = config.reconnect_timeout
                 if connect_attempt > 0:
@@ -120,9 +118,6 @@ def stream(
 
                 connect_attempt += 1
                 time.sleep(waiting_period)
-
-        if error is not None:
-            raise error
 
 
 async def stream_async(
@@ -160,35 +155,26 @@ async def stream_async(
         This time is exponentiated by the number of connectioin attempts.
     """
     if session is None:
-        timeout = httpx.Timeout(
-            connect=connect_timeout,
-            read=None,
-            write=None,
-            pool=None,
-        )
-        session = httpx.AsyncClient(timeout=timeout)
+        session = create_session(httpx.AsyncClient, connect_timeout=connect_timeout)
 
+    config = SSEConfig(reconnect_timeout=reconnect_timeout, last_event_id="")
     async with session:
-        error: Exception | None = None
-        config = types.SimpleNamespace(
-            reconnect_timeout=reconnect_timeout,
-            last_event_id="",
-        )
         connect_attempt = 0
-        while connect_attempt <= max_connect_attempts:
-            try:
-                headers = HEADERS.copy()
-                if config.last_event_id:
-                    headers["Last-Event-ID"] = config.last_event_id
+        while True:
+            headers = SSE_HEADERS.copy()
+            if config.last_event_id:
+                headers["Last-Event-ID"] = config.last_event_id
 
+            try:
                 async with session.stream(method, url, headers=headers) as response:
+                    validate_sse_response(response)
+
                     if response.status_code == http.HTTPStatus.NO_CONTENT:
                         _logger.info("Client was told to stop reconnecting.")
                         break
 
-                    check_response(response)
+                    config.origin = str(response.url)
 
-                    error = None
                     connect_attempt = 0
                     _logger.info(f"Connected to {url!r}.")
 
@@ -199,8 +185,10 @@ async def stream_async(
                         for event in parse_events(lines, config):
                             yield event
 
-            except httpx.HTTPError as e:
-                error = e
+            except httpx.HTTPError:
+                if connect_attempt >= max_connect_attempts:
+                    _logger.exception(f"Failed to connect to {url!r}!")
+                    raise
 
                 waiting_period = config.reconnect_timeout
                 if connect_attempt > 0:
@@ -215,6 +203,3 @@ async def stream_async(
 
                 connect_attempt += 1
                 await asyncio.sleep(waiting_period)
-
-        if error is not None:
-            raise error
