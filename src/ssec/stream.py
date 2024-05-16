@@ -41,6 +41,7 @@ def stream(
     *,
     session: httpx.Client | None = None,
     connect_timeout: float = DEFAULT_CONNECT_TIMEOUT,
+    headers: dict[str, str] | None = None,
     method: Literal["GET", "POST"] = "GET",
     chunk_size: int = DEFAULT_CHUNK_SIZE,
     max_connect_attempts: int = DEFAULT_MAX_CONNECT_ATTEMPTS,
@@ -58,6 +59,9 @@ def stream(
     connect_timeout
         The timeout for connecting to the server, in seconds.
         Only used if `session` is `None`.
+    headers
+        Optional headers to include in the session.
+        Only used if `session` is `None`.
     method
         The HTTP method to use for the request.
     chunk_size
@@ -70,11 +74,17 @@ def stream(
         The additional time to wait to ease a potentially overloaded server, in seconds.
         This time is exponentiated by the number of connectioin attempts.
     """
+    session_must_be_closed = False
     if session is None:
-        session = create_session(httpx.Client, connect_timeout=connect_timeout)
+        session = create_session(
+            httpx.Client,
+            connect_timeout=connect_timeout,
+            headers=headers,
+        )
+        session_must_be_closed = True
 
     config = SSEConfig(reconnect_timeout=reconnect_timeout, last_event_id="")
-    with session:
+    try:
         connect_attempt = 0
         while True:
             headers = SSE_HEADERS.copy()
@@ -118,6 +128,9 @@ def stream(
 
                 connect_attempt += 1
                 time.sleep(waiting_period)
+    finally:
+        if session_must_be_closed:
+            session.close()
 
 
 async def stream_async(
@@ -125,6 +138,7 @@ async def stream_async(
     *,
     session: httpx.AsyncClient | None = None,
     connect_timeout: float = DEFAULT_CONNECT_TIMEOUT,
+    headers: dict[str, str] | None = None,
     method: Literal["GET", "POST"] = "GET",
     chunk_size: int = DEFAULT_CHUNK_SIZE,
     max_connect_attempts: int = DEFAULT_MAX_CONNECT_ATTEMPTS,
@@ -142,6 +156,9 @@ async def stream_async(
     connect_timeout
         The timeout for connecting to the server, in seconds.
         Only used if `session` is `None`.
+    headers
+        Optional headers to include in the session.
+        Only used if `session` is `None`.
     method
         The HTTP method to use for the request.
     chunk_size
@@ -154,11 +171,17 @@ async def stream_async(
         The additional time to wait to ease a potentially overloaded server, in seconds.
         This time is exponentiated by the number of connectioin attempts.
     """
+    session_must_be_closed = False
     if session is None:
-        session = create_session(httpx.AsyncClient, connect_timeout=connect_timeout)
+        session = create_session(
+            httpx.AsyncClient,
+            connect_timeout=connect_timeout,
+            headers=headers,
+        )
+        session_must_be_closed = True
 
     config = SSEConfig(reconnect_timeout=reconnect_timeout, last_event_id="")
-    async with session:
+    try:
         connect_attempt = 0
         while True:
             headers = SSE_HEADERS.copy()
@@ -203,3 +226,6 @@ async def stream_async(
 
                 connect_attempt += 1
                 await asyncio.sleep(waiting_period)
+    finally:
+        if session_must_be_closed:
+            await session.aclose()

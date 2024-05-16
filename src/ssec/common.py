@@ -18,6 +18,7 @@ from .event import Event
 def create_session[T: (httpx.Client, httpx.AsyncClient)](
     session_class: type[T],
     connect_timeout: float,
+    headers: dict[str, str] | None = None,
 ) -> T:
     """Create an `httpx` session with a custom connect timeout.
 
@@ -27,6 +28,8 @@ def create_session[T: (httpx.Client, httpx.AsyncClient)](
         The `httpx` session class to create.
     connect_timeout
         The connect timeout, in seconds.
+    headers
+        Optional headers to include in the session.
     """
     timeout = httpx.Timeout(
         connect=connect_timeout,
@@ -34,7 +37,7 @@ def create_session[T: (httpx.Client, httpx.AsyncClient)](
         write=None,
         pool=None,
     )
-    return session_class(timeout=timeout)
+    return session_class(timeout=timeout, headers=headers)
 
 
 @dataclasses.dataclass(

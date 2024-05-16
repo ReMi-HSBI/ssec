@@ -4,7 +4,7 @@ requires = ["setuptools"]
 
 [project]
 name = "ssec"
-version = "3.0.0"
+version = "3.0.1"
 description = "Synchronous and asynchronous library for server-sent events."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -127,6 +127,8 @@ lint.ignore = [
   "RSE102",   # allow unnecessary parentheses on raised exceptions (bug in ruff)
   "PLR1702",  # allow too many nested blocks
   "PLR0913",  # allow too many arguments
+  "PLR0912",  # allow too many branches
+  "C901",     # allow complex structure
 ]
 
 [tool.ruff.lint.extend-per-file-ignores]
