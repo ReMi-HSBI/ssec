@@ -4,7 +4,7 @@ requires = ["setuptools"]
 
 [project]
 name = "ssec"
-version = "1.0.0"
+version = "3.0.0"
 description = "Synchronous and asynchronous library for server-sent events."
 readme = "README.md"
 requires-python = ">=3.12"
