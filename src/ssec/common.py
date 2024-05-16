@@ -138,6 +138,11 @@ def parse_events(
                 origin=config.origin,
                 last_event_id=config.last_event_id,
             )
+
+            # Reset buffers.
+            event_type = ""
+            event_data = ""
+
             continue
 
         # If the line starts with a U+003A COLON character (:) -> Ignore the line.
