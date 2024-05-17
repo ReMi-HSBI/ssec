@@ -94,7 +94,7 @@ async def main() -> None:
                     streamer = response.content.iter_chunked(chunk_size)
                     async for event in ssec.stream_async(streamer, config=config):
                         print(event)
-            except (aiohttp.ClientError, ValueError):
+            except aiohttp.ClientError:
                 if connect_attempt >= max_connect_attempts:
                     logging.exception("Failed to connect!")
                     raise
