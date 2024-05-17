@@ -6,7 +6,7 @@ import ssec
 
 async def main() -> None:
     logging.basicConfig(level=logging.INFO)
-    async for event in ssec.stream_async(
+    async for event in ssec.sse_async(
         "https://stream.wikimedia.org/v2/stream/recentchange",
     ):
         print(event)

@@ -37,6 +37,61 @@ _logger = logging.getLogger("ssec")
 
 
 def stream(
+    streamer: Iterator[bytes],
+    *,
+    config: SSEConfig,
+) -> Iterator[Event]:
+    """Stream server-sent events (SSEs), synchronously.
+
+    Low level function to synchronously stream server-sent events (SSEs) from
+    a streamer object (Iterator[bytes]). This function is useful when you have
+    a custom way of streaming data and want to parse the SSEs from it.
+    Unfortunately, this function does not handle reconnections, so you will
+    have to handle that yourself.
+
+    Parameters
+    ----------
+    streamer
+        The synchronous streamer object to read (byte-)data from.
+    config
+        A configuration object containing runtime settable values.
+    """
+    buffer = ""
+    for chunk in streamer:
+        buffer += DECODER.decode(chunk)
+        lines, buffer = extract_lines(buffer)
+        yield from parse_events(lines, config)
+
+
+async def stream_async(
+    streamer: AsyncIterator[bytes],
+    *,
+    config: SSEConfig,
+) -> AsyncIterator[Event]:
+    """Stream server-sent events (SSEs), asynchronously.
+
+    Low level function to asynchronously stream server-sent events (SSEs) from
+    a streamer object (AsyncIterator[bytes]). This function is useful when you
+    have a custom way of streaming data and want to parse the SSEs from it.
+    Unfortunately, this function does not handle reconnection, so you will
+    have to handle that yourself.
+
+    Parameters
+    ----------
+    streamer
+        The asynchronous streamer object to read (byte-)data from.
+    config
+        A configuration object containing runtime settable values.
+    """
+    buffer = ""
+    async for chunk in streamer:
+        buffer += DECODER.decode(chunk)
+        lines, buffer = extract_lines(buffer)
+        for event in parse_events(lines, config):
+            yield event
+
+
+def sse(
     url: str,
     *,
     session: httpx.Client | None = None,
@@ -49,6 +104,9 @@ def stream(
     backoff_delay: float = DEFAULT_BACKOFF_DELAY,
 ) -> Iterator[Event]:
     """Stream server-sent events (SSEs), synchronously.
+
+    High level function to synchronously stream server-sent events (SSEs) from
+    a URL. This function handles reconnections and parsing of the SSEs.
 
     Parameters
     ----------
@@ -104,11 +162,8 @@ def stream(
                     connect_attempt = 0
                     _logger.info(f"Connected to {url!r}.")
 
-                    buffer = ""
-                    for chunk in response.iter_bytes(chunk_size=chunk_size):
-                        buffer += DECODER.decode(chunk)
-                        lines, buffer = extract_lines(buffer)
-                        yield from parse_events(lines, config)
+                    streamer = response.iter_bytes(chunk_size=chunk_size)
+                    yield from stream(streamer, config=config)
 
             except httpx.HTTPError:
                 if connect_attempt >= max_connect_attempts:
@@ -133,7 +188,7 @@ def stream(
             session.close()
 
 
-async def stream_async(
+async def sse_async(
     url: str,
     *,
     session: httpx.AsyncClient | None = None,
@@ -146,6 +201,9 @@ async def stream_async(
     backoff_delay: float = DEFAULT_BACKOFF_DELAY,
 ) -> AsyncIterator[Event]:
     """Stream server-sent events (SSEs), asynchronously.
+
+    High level function to asynchronously stream server-sent events (SSEs) from
+    a URL. This function handles reconnections and parsing of the SSEs.
 
     Parameters
     ----------
@@ -201,12 +259,9 @@ async def stream_async(
                     connect_attempt = 0
                     _logger.info(f"Connected to {url!r}.")
 
-                    buffer = ""
-                    async for chunk in response.aiter_bytes(chunk_size=chunk_size):
-                        buffer += DECODER.decode(chunk)
-                        lines, buffer = extract_lines(buffer)
-                        for event in parse_events(lines, config):
-                            yield event
+                    streamer = response.aiter_bytes(chunk_size=chunk_size)
+                    async for event in stream_async(streamer, config=config):
+                        yield event
 
             except httpx.HTTPError:
                 if connect_attempt >= max_connect_attempts:

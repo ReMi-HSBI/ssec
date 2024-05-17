@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 import httpx
 
-from .constants import DELIMITER, SSE_CONTENT_TYPE
+from .constants import DEFAULT_RECONNECT_TIMEOUT, DELIMITER, SSE_CONTENT_TYPE
 from .event import Event
 
 
@@ -56,10 +56,12 @@ class SSEConfig:
         The time to wait before reconnecting to a server, in seconds.
     last_event_id
         The last event ID received from the server.
+    origin
+        The origin of the server.
     """
 
-    reconnect_timeout: float
-    last_event_id: str
+    reconnect_timeout: float = DEFAULT_RECONNECT_TIMEOUT
+    last_event_id: str = ""
     origin: str | None = None
 
 
