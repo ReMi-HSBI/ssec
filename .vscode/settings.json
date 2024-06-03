@@ -1,31 +1,10 @@
 {
-    "editor.rulers": [
-        {
-            "column": 78,
-            "color": "#ffb03a20"
-        },
-        {
-            "column": 88,
-            "color": "#ff3a3a50"
-        }
-    ],
-    
     "[python]": {
         "editor.defaultFormatter": "charliermarsh.ruff",
-        "editor.formatOnSave": true,
-        "editor.codeActionsOnSave": {
-            "source.organizeImports": "explicit"
-        }
     },
+    "ruff.nativeServer": true,
+    "ruff.configuration": "pyproject.toml",
     "mypy-type-checker.importStrategy": "fromEnvironment",
-    "mypy-type-checker.args": [
-        "--config-file=pyproject.toml"
-    ],
-    "ruff.importStrategy": "fromEnvironment",
-    "ruff.lint.args": [
-        "--config=pyproject.toml"
-    ],
-    "ruff.format.args": [
-        "--config=pyproject.toml"
-    ],
+    "mypy-type-checker.reportingScope": "workspace",
+    "mypy-type-checker.args": ["--config-file=pyproject.toml"],
 }
