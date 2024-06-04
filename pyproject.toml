@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 ##############################################################################
 [project]
 name = "ssec"
-version = "4.0.1"
+version = "4.1.0"
 description = "Synchronous and asynchronous library for server-sent events."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -52,6 +52,10 @@ dev-dependencies = [
     "pytest~=8.2.1",
     "pytest-asyncio~=0.23.7",
 ]
+
+[tool.rye.scripts]
+sse_sync_example = "python examples/sync.py"
+sse_async_example = "python examples/async.py"
 
 [tool.ruff]
 cache-dir = ".cache/ruff"

@@ -2,6 +2,6 @@
 
 from .common import SSEConfig
 from .event import Event
-from .stream import sse, sse_async, stream, stream_async
+from .streamer import sse, sse_async, stream, stream_async
 
 __all__ = ["Event", "SSEConfig", "sse", "sse_async", "stream", "stream_async"]
