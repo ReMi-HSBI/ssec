@@ -8,13 +8,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ssec"
 version = "4.1.0"
-description = "Synchronous and asynchronous library for server-sent events."
+description = "Synchronous and asynchronous library for Server Sent Event (SSE)."
 readme = "README.md"
 requires-python = ">=3.12"
 authors = [{ name = "J. Baudisch", email = "justin.baudisch@hsbi.de" }]
 maintainers = [{ name = "J. Baudisch", email = "justin.baudisch@hsbi.de" }]
 keywords = [
-    "Server-sent events",
+    "Server Sent Event (SSE)",
     "Network",
     "Synchronous",
     "Asynchronous"

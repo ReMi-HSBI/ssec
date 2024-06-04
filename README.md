@@ -6,7 +6,7 @@
 
 ## Description
 
-Yet another library for server-sent events.  
+Python library providing synchronous and asynchronous streaming of Server Sent Event (SSE).
 This library works with [httpx](https://github.com/encode/httpx) to support
 synchronous as well as asynchronous workflows but is also usable with other
 http frameworks ([see below](#aiohttp)).
