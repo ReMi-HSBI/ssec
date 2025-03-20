@@ -41,3 +41,17 @@ dev = [
 
 [project.urls]
 Repository = "https://github.com/ReMi-HSBI/ssec"
+
+########################################################################
+###############################  TOOLS  ################################
+########################################################################
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"ssec" = ["py.typed"]
+
+[tool.pytest.ini_options]
+cache_dir = ".cache/pytest"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
