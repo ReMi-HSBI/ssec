@@ -1,3 +1,7 @@
+<p align="center">
+    <img src="https://github.com/ReMi-HSBI/ssec/blob/main/docs/src/static/images/ssec_logo.svg?raw=true" alt="drawing" width="33%"/>
+</p>
+
 # ssec
 
 [![ruff](https://img.shields.io/badge/ruff-⚡-261230.svg?style=flat-square)](https://docs.astral.sh/ruff)
