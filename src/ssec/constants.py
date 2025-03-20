@@ -20,7 +20,8 @@ DEFAULT_MAX_CONNECT_ATTEMPTS: Final[int] = 3
 #: The default time to wait before reconnecting to a server, in seconds.
 DEFAULT_RECONNECT_TIMEOUT: Final[float] = 3.0
 
-#: The default additional time to wait to ease a potentially overloaded server, in seconds.  # noqa: E501
+#: The default additional time to wait to ease a potentially overloaded
+#: server, in seconds.
 DEFAULT_BACKOFF_DELAY: Final[float] = 2.5
 
 #: The incremental UTF-8 decoder with replacement error handling.

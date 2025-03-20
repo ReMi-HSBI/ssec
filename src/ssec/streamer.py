@@ -55,6 +55,11 @@ def stream(
         The synchronous streamer object to read (byte-)data from.
     config
         A configuration object containing runtime settable values.
+
+    Yields
+    ------
+    Event
+        Server-sent event (SSE).
     """
     buffer = ""
     for chunk in streamer:
@@ -70,11 +75,11 @@ async def stream_async(
 ) -> AsyncIterator[Event]:
     """Stream server-sent events (SSEs), asynchronously.
 
-    Low level function to asynchronously stream server-sent events (SSEs) from
-    a streamer object (AsyncIterator[bytes]). This function is useful when you
-    have a custom way of streaming data and want to parse the SSEs from it.
-    Unfortunately, this function does not handle reconnection, so you will
-    have to handle that yourself.
+    Low level function to asynchronously stream server-sent events (SSEs)
+    from a streamer object (AsyncIterator[bytes]). This function is
+    useful when you have a custom way of streaming data and want to
+    parse the SSEs from it. Unfortunately, this function does not handle
+    reconnection, so you will have to handle that yourself.
 
     Parameters
     ----------
@@ -82,6 +87,11 @@ async def stream_async(
         The asynchronous streamer object to read (byte-)data from.
     config
         A configuration object containing runtime settable values.
+
+    Yields
+    ------
+    Event
+        Server-sent event (SSE).
     """
     buffer = ""
     async for chunk in streamer:
@@ -91,7 +101,7 @@ async def stream_async(
             yield event
 
 
-def sse(
+def sse(  # noqa: PLR0913
     url: str,
     *,
     session: httpx.Client | None = None,
@@ -105,8 +115,9 @@ def sse(
 ) -> Iterator[Event]:
     """Stream server-sent events (SSEs), synchronously.
 
-    High level function to synchronously stream server-sent events (SSEs) from
-    a URL. This function handles reconnections and parsing of the SSEs.
+    High level function to synchronously stream server-sent events (SSEs)
+    from a URL. This function handles reconnections and parsing of the
+    SSEs.
 
     Parameters
     ----------
@@ -129,8 +140,19 @@ def sse(
     reconnect_timeout
         The time to wait before reconnecting to the server, in seconds.
     backoff_delay
-        The additional time to wait to ease a potentially overloaded server, in seconds.
-        This time is exponentiated by the number of connectioin attempts.
+        The additional time to wait to ease a potentially overloaded
+        server, in seconds. This time is exponentiated by the number of
+        connectioin attempts.
+
+    Yields
+    ------
+    Event
+        Server-sent event (SSE).
+
+    Raises
+    ------
+    httpx.HTTPError
+        If the maximum number of connection attempts is reached.
     """
     session_must_be_closed = False
     if session is None:
@@ -160,14 +182,14 @@ def sse(
                     config.origin = str(response.url)
 
                     connect_attempt = 0
-                    _logger.info(f"Connected to {url!r}.")
+                    _logger.info("Connected to %r.", url)
 
                     streamer = response.iter_bytes(chunk_size=chunk_size)
                     yield from stream(streamer, config=config)
 
             except httpx.HTTPError:
                 if connect_attempt >= max_connect_attempts:
-                    _logger.exception(f"Failed to connect to {url!r}!")
+                    _logger.exception("Failed to connect to %r", url)
                     raise
 
                 waiting_period = config.reconnect_timeout
@@ -188,7 +210,7 @@ def sse(
             session.close()
 
 
-async def sse_async(
+async def sse_async(  # noqa: PLR0913
     url: str,
     *,
     session: httpx.AsyncClient | None = None,
@@ -202,8 +224,9 @@ async def sse_async(
 ) -> AsyncIterator[Event]:
     """Stream server-sent events (SSEs), asynchronously.
 
-    High level function to asynchronously stream server-sent events (SSEs) from
-    a URL. This function handles reconnections and parsing of the SSEs.
+    High level function to asynchronously stream server-sent events (SSEs)
+    from a URL. This function handles reconnections and parsing of the
+    SSEs.
 
     Parameters
     ----------
@@ -226,8 +249,19 @@ async def sse_async(
     reconnect_timeout
         The time to wait before reconnecting to the server, in seconds.
     backoff_delay
-        The additional time to wait to ease a potentially overloaded server, in seconds.
-        This time is exponentiated by the number of connectioin attempts.
+        The additional time to wait to ease a potentially overloaded
+        server, in seconds. This time is exponentiated by the number of
+        connectioin attempts.
+
+    Yields
+    ------
+    Event
+        Server-sent event (SSE).
+
+    Raises
+    ------
+    httpx.HTTPError
+        If the maximum number of connection attempts is reached.
     """
     session_must_be_closed = False
     if session is None:
@@ -247,7 +281,11 @@ async def sse_async(
                 headers["Last-Event-ID"] = config.last_event_id
 
             try:
-                async with session.stream(method, url, headers=headers) as response:
+                async with session.stream(
+                    method,
+                    url,
+                    headers=headers,
+                ) as response:
                     validate_sse_response(response)
 
                     if response.status_code == http.HTTPStatus.NO_CONTENT:
@@ -257,7 +295,7 @@ async def sse_async(
                     config.origin = str(response.url)
 
                     connect_attempt = 0
-                    _logger.info(f"Connected to {url!r}.")
+                    _logger.info("Connected to %r", url)
 
                     streamer = response.aiter_bytes(chunk_size=chunk_size)
                     async for event in stream_async(streamer, config=config):
@@ -265,7 +303,7 @@ async def sse_async(
 
             except httpx.HTTPError:
                 if connect_attempt >= max_connect_attempts:
-                    _logger.exception(f"Failed to connect to {url!r}!")
+                    _logger.exception("Failed to connect %r", url)
                     raise
 
                 waiting_period = config.reconnect_timeout

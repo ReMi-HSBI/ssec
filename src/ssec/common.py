@@ -30,6 +30,11 @@ def create_session[T: (httpx.Client, httpx.AsyncClient)](
         The connect timeout, in seconds.
     headers
         Optional headers to include in the session.
+
+    Returns
+    -------
+    T
+        An `httpx` session with a custom connect timeout.
     """
     timeout = httpx.Timeout(
         connect=connect_timeout,
@@ -98,7 +103,8 @@ def extract_lines(buffer: str) -> tuple[list[str], str]:
     Returns
     -------
     tuple[list[str], str]
-        A tuple containing extracted lines of the buffer and the buffers remnant.
+        A tuple containing extracted lines of the buffer and the buffers
+        remnant.
     """
     lines: list[str] = []
     for line in buffer.splitlines(keepends=True):
@@ -110,10 +116,7 @@ def extract_lines(buffer: str) -> tuple[list[str], str]:
     return lines, buffer
 
 
-def parse_events(
-    lines: list[str],
-    config: SSEConfig,
-) -> Iterator[Event]:
+def parse_events(lines: list[str], config: SSEConfig) -> Iterator[Event]:  # noqa: C901
     """Parse SSEs from a list of lines.
 
     Parameters
@@ -122,6 +125,11 @@ def parse_events(
         A list of lines to parse SSEs from.
     config
         A configuration object containing runtime settable values.
+
+    Yields
+    ------
+    Event
+        Parsed event.
     """
     event_type = ""
     event_data = ""
@@ -131,7 +139,8 @@ def parse_events(
             if not event_type:
                 event_type = "message"
 
-            # Remove last character of data if it is a U+000A LINE FEED (LF) character.
+            # Remove last character of data if it is a U+000A LINE FEED (LF)
+            # character.
             event_data = event_data.rstrip("\n")
 
             yield Event(
@@ -147,7 +156,7 @@ def parse_events(
 
             continue
 
-        # If the line starts with a U+003A COLON character (:) -> Ignore the line.
+        # If the line starts with a U+003A COLON character (:) -> Ignore.
         if line.startswith(DELIMITER):
             continue
 
@@ -163,24 +172,26 @@ def parse_events(
                 event_type = value
             case "data":
                 # If the field name is "data"
-                # -> Append the field value to the data buffer, then append a
-                # single U+000A LINE FEED (LF) character to the data buffer.
+                # -> Append the field value to the data buffer, then
+                # append a single U+000A LINE FEED (LF) character to the
+                # data buffer.
                 event_data += f"{value}\n"
             case "id":
                 # If the field name is "id"
-                # -> If the field value does not contain U+0000 NULL, then set
-                # the last event ID buffer to the field value. Otherwise,
-                # ignore the field. The specification is not clear here.
-                # In an example it says: "If the "id" field has no value, this
-                # will reset the last event ID to the empty string"
+                # -> If the field value does not contain U+0000 NULL,
+                # then set the last event ID buffer to the field value.
+                # Otherwise, ignore the field. The specification is not
+                # clear here. In an example it says: "If the "id" field
+                # has no value, this will reset the last event ID to the
+                # empty string".
                 if "\u0000" not in value:
                     config.last_event_id = value
             case "retry":
                 # If the field name is "retry"
-                # -> If the field value consists of only ASCII digits, then
-                # interpret the field value as an integer in base ten, and set
-                # the event stream's reconnection time to that integer.
-                # Otherwise, ignore the field.
+                # -> If the field value consists of only ASCII digits,
+                # then interpret the field value as an integer in base
+                # ten, and set the event stream's reconnection time to
+                # that integer. Otherwise, ignore the field.
                 if value.isdigit():
                     config.reconnect_timeout = float(value)
             case _:
