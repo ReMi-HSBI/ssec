@@ -1,3 +1,6 @@
+########################################################################
+###############################  BUILD  ################################
+########################################################################
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
@@ -8,15 +11,14 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ssec"
 version = "4.2.2"
-description = "Synchronous and asynchronous library for Server Sent Event (SSE)."
+description = """\
+    Synchronous and asynchronous library for Server Sent Event (SSE). \
+"""
 readme = "README.md"
 requires-python = ">=3.12"
 authors = [{ name = "J. Baudisch", email = "justin.baudisch@hsbi.de" }]
 maintainers = [{ name = "J. Baudisch", email = "justin.baudisch@hsbi.de" }]
-keywords = [
-    "Server Sent Event (SSE)",
-    "SSE-Client",
-]
+keywords = ["Server Sent Event (SSE)", "SSE-Client"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -50,8 +52,3 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "ssec" = ["py.typed"]
-
-[tool.pytest.ini_options]
-cache_dir = ".cache/pytest"
-asyncio_mode = "auto"
-asyncio_default_fixture_loop_scope = "function"
