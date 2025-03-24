@@ -22,7 +22,7 @@ usable with other http frameworks ([see below](#aiohttp)).
 pip install ssec
 ```
 
-## Example
+# Usage
 
 `sync`
 
