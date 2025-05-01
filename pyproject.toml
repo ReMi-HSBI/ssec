@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 ########################################################################
 [project]
 name = "ssec"
-version = "4.2.2"
+version = "4.2.3"
 description = """\
     Synchronous and asynchronous library for Server Sent Event (SSE). \
 """
@@ -20,7 +20,7 @@ authors = [{ name = "J. Baudisch", email = "justin.baudisch@hsbi.de" }]
 maintainers = [{ name = "J. Baudisch", email = "justin.baudisch@hsbi.de" }]
 keywords = ["Server Sent Event (SSE)", "SSE-Client"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Topic :: Software Development",
     "Topic :: Communications",
@@ -35,7 +35,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "ruff == 0.11.0",       # Linter & Formatter (https://pypi.org/project/ruff)
+    "ruff == 0.11.8",       # Linter & Formatter (https://pypi.org/project/ruff)
     "mypy == 1.15.0",       # Static Type Checker (https://pypi.org/project/mypy)
     "Sphinx == 8.2.3",      # Documentation Generator (https://pypi.org/project/Sphinx)
     "furo == 2024.8.6",     # Documentation Theme (https://pypi.org/project/furo)
