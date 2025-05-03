@@ -105,8 +105,9 @@ def sse(  # noqa: PLR0913
     url: str,
     *,
     session: httpx.Client | None = None,
+    session_headers: dict[str, str] | None = None,
     connect_timeout: float = DEFAULT_CONNECT_TIMEOUT,
-    headers: dict[str, str] | None = None,
+    request_headers: dict[str, str] | None = None,
     method: Literal["GET", "POST"] = "GET",
     chunk_size: int = DEFAULT_CHUNK_SIZE,
     max_connect_attempts: int = DEFAULT_MAX_CONNECT_ATTEMPTS,
@@ -125,12 +126,14 @@ def sse(  # noqa: PLR0913
         The URL to stream server-sent events from.
     session
         An optional HTTP session to use for the request.
+    session_headers
+        Optional headers to include in the session.
+        Only used if `session` is `None`.
     connect_timeout
         The timeout for connecting to the server, in seconds.
         Only used if `session` is `None`.
-    headers
-        Optional headers to include in the session.
-        Only used if `session` is `None`.
+    request_headers
+        Optional headers to include in the request.
     method
         The HTTP method to use for the request.
     chunk_size
@@ -159,20 +162,28 @@ def sse(  # noqa: PLR0913
         session = create_session(
             httpx.Client,
             connect_timeout=connect_timeout,
-            headers=headers,
+            headers=session_headers,
         )
         session_must_be_closed = True
+
+    if request_headers is None:
+        request_headers = {}
+
+    request_headers.update(SSE_HEADERS)
 
     config = SSEConfig(reconnect_timeout=reconnect_timeout, last_event_id="")
     try:
         connect_attempt = 0
         while True:
-            headers = SSE_HEADERS.copy()
             if config.last_event_id:
-                headers["Last-Event-ID"] = config.last_event_id
+                request_headers["Last-Event-ID"] = config.last_event_id
 
             try:
-                with session.stream(method, url, headers=headers) as response:
+                with session.stream(
+                    method,
+                    url,
+                    headers=request_headers,
+                ) as response:
                     validate_sse_response(response)
 
                     if response.status_code == http.HTTPStatus.NO_CONTENT:
@@ -210,12 +221,13 @@ def sse(  # noqa: PLR0913
             session.close()
 
 
-async def sse_async(  # noqa: PLR0913
+async def sse_async(  # noqa: PLR0913, C901
     url: str,
     *,
     session: httpx.AsyncClient | None = None,
+    session_headers: dict[str, str] | None = None,
     connect_timeout: float = DEFAULT_CONNECT_TIMEOUT,
-    headers: dict[str, str] | None = None,
+    request_headers: dict[str, str] | None = None,
     method: Literal["GET", "POST"] = "GET",
     chunk_size: int = DEFAULT_CHUNK_SIZE,
     max_connect_attempts: int = DEFAULT_MAX_CONNECT_ATTEMPTS,
@@ -234,12 +246,14 @@ async def sse_async(  # noqa: PLR0913
         The URL to stream server-sent events from.
     session
         An optional HTTP session to use for the request.
+    session_headers
+        Optional headers to include in the session.
+        Only used if `session` is `None`.
     connect_timeout
         The timeout for connecting to the server, in seconds.
         Only used if `session` is `None`.
-    headers
-        Optional headers to include in the session.
-        Only used if `session` is `None`.
+    session_headers
+        Optional headers to include in the request.
     method
         The HTTP method to use for the request.
     chunk_size
@@ -268,23 +282,27 @@ async def sse_async(  # noqa: PLR0913
         session = create_session(
             httpx.AsyncClient,
             connect_timeout=connect_timeout,
-            headers=headers,
+            headers=session_headers,
         )
         session_must_be_closed = True
+
+    if request_headers is None:
+        request_headers = {}
+
+    request_headers.update(SSE_HEADERS)
 
     config = SSEConfig(reconnect_timeout=reconnect_timeout, last_event_id="")
     try:
         connect_attempt = 0
         while True:
-            headers = SSE_HEADERS.copy()
             if config.last_event_id:
-                headers["Last-Event-ID"] = config.last_event_id
+                request_headers["Last-Event-ID"] = config.last_event_id
 
             try:
                 async with session.stream(
                     method,
                     url,
-                    headers=headers,
+                    headers=request_headers,
                 ) as response:
                     validate_sse_response(response)
 
